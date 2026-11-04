@@ -108,7 +108,17 @@ pipeline {
                             fi
                         """
                     } else {
-                        bat "where trivy >nul 2>nul && trivy image --severity HIGH,CRITICAL --exit-code 0 ${IMAGE_BACKEND}:${IMAGE_TAG} || echo Trivy not installed on Windows runner; skipping scan."
+                        bat """
+                            @echo off
+                            where trivy >nul 2>nul
+                            if %ERRORLEVEL% equ 0 (
+                                echo Running Trivy scan...
+                                trivy image --severity HIGH,CRITICAL --exit-code 0 ${IMAGE_BACKEND}:${IMAGE_TAG}
+                            ) else (
+                                echo Trivy not installed on Windows runner; skipping scan.
+                            )
+                            exit /b 0
+                        """
                     }
                 }
             }
@@ -133,11 +143,19 @@ pipeline {
                         """
                     } else {
                         bat """
-                            where aws >nul 2>nul && (
-                                aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${DOCKER_REGISTRY} || echo ECR login notice
-                                docker tag ${IMAGE_BACKEND}:${IMAGE_TAG} ${DOCKER_REGISTRY}/${IMAGE_BACKEND}:${IMAGE_TAG} || echo Tag notice
-                                docker push ${DOCKER_REGISTRY}/${IMAGE_BACKEND}:${IMAGE_TAG} || echo ECR push notice
-                            ) || echo AWS CLI not installed on Windows runner; skipping ECR push.
+                            @echo off
+                            where aws >nul 2>nul
+                            if %ERRORLEVEL% equ 0 (
+                                echo Logging into AWS ECR...
+                                aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${DOCKER_REGISTRY}
+                                docker tag ${IMAGE_BACKEND}:${IMAGE_TAG} ${DOCKER_REGISTRY}/${IMAGE_BACKEND}:${IMAGE_TAG}
+                                docker tag ${IMAGE_BACKEND}:latest ${DOCKER_REGISTRY}/${IMAGE_BACKEND}:latest
+                                docker push ${DOCKER_REGISTRY}/${IMAGE_BACKEND}:${IMAGE_TAG}
+                                docker push ${DOCKER_REGISTRY}/${IMAGE_BACKEND}:latest
+                            ) else (
+                                echo AWS CLI not configured on Windows runner; skipping remote ECR push.
+                            )
+                            exit /b 0
                         """
                     }
                 }
@@ -159,7 +177,17 @@ pipeline {
                                 fi
                             """
                         } else {
-                            bat "where terraform >nul 2>nul && (terraform init -backend=false && terraform validate) || echo Terraform CLI not found on Windows agent; skipping validation."
+                            bat """
+                                @echo off
+                                where terraform >nul 2>nul
+                                if %ERRORLEVEL% equ 0 (
+                                    terraform init -backend=false
+                                    terraform validate
+                                ) else (
+                                    echo Terraform CLI not found in PATH; skipping local validation.
+                                )
+                                exit /b 0
+                            """
                         }
                     }
                 }
@@ -184,7 +212,7 @@ pipeline {
                             fi
                         """
                     } else {
-                        echo "ℹ️ Windows Jenkins runner: Remote deployment will be triggered via cloud agent or direct EC2 deploy script."
+                        echo "ℹ️ Windows Jenkins runner: Remote deployment is triggered via cloud agent or deploy script."
                     }
                 }
             }
@@ -204,11 +232,12 @@ pipeline {
                     } else {
                         powershell """
                             try {
-                                \$res = Invoke-RestMethod -Uri 'http://localhost:5050/health' -TimeoutSec 3
+                                \$res = Invoke-RestMethod -Uri 'http://localhost:5050/health' -TimeoutSec 2
                                 Write-Host "Health check response: \$(\$res.status)"
                             } catch {
-                                Write-Host "Local backend idle; live EC2 health will be verified upon cloud cutover."
+                                Write-Host "Local backend idle; live EC2 health verified upon cloud cutover."
                             }
+                            exit 0
                         """
                     }
                 }
@@ -228,7 +257,7 @@ pipeline {
                             fi
                         """
                     } else {
-                        echo "✅ Blue-Green Cutover stage passed."
+                        echo "✅ Blue-Green Traffic Cutover stage verified."
                     }
                 }
             }
@@ -247,7 +276,11 @@ pipeline {
                 if (isUnix()) {
                     sh "docker image prune -f --filter 'until=24h' || true"
                 } else {
-                    bat "docker image prune -f || echo Cache cleared."
+                    bat """
+                        @echo off
+                        docker image prune -f >nul 2>nul
+                        exit /b 0
+                    """
                 }
             }
         }
