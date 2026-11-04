@@ -1,7 +1,10 @@
 # RetailMax Monolith API - Multi-Stage Production Dockerfile
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
+
+# Install native dependencies required by Prisma engine
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Install build dependencies
 COPY package*.json ./
@@ -16,9 +19,12 @@ RUN if [ -f prisma/schema.postgresql.prisma ]; then cp prisma/schema.postgresql.
 COPY . .
 
 # Runner stage
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 
 WORKDIR /app
+
+# Install native runtime dependencies for Prisma and healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates curl && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 ENV PORT=5000
@@ -32,19 +38,17 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src ./src
+COPY --from=builder /app/scripts ./scripts
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001 -G nodejs && \
-    chown -R nodejs:nodejs /app
+RUN useradd -m -u 1001 nodejs && chown -R nodejs:nodejs /app
 
 USER nodejs
 
 EXPOSE 5000
 
-# Automated healthcheck for AWS ALB & Docker Swarm / ECS
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:5000/health || exit 1
+# Automated healthcheck for AWS ALB & Docker
+HEALTHCHECK --interval=20s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:5000/health || exit 1
 
-CMD ["node", "src/server.js"]
-
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node prisma/seed.js && node src/server.js"]

@@ -6,7 +6,17 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting RetailMax Database Seeding...');
 
-  // 1. Clean existing records in reverse dependency order
+  // Check if database is already seeded
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: 'admin@retailmax.com' },
+  });
+
+  if (existingAdmin) {
+    console.log('🌱 Database is already initialized. Skipping seed.');
+    return;
+  }
+
+  // 1. Clean existing records if any
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.cartItem.deleteMany();
