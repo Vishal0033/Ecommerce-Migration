@@ -21,8 +21,14 @@ console.log(`======================================================\n`);
 
 const schemaPrismaPath = path.join(backendRoot, 'prisma', 'schema.prisma');
 const schemaSqlitePath = path.join(backendRoot, 'prisma', 'schema.sqlite.prisma');
+const schemaPostgresPath = path.join(backendRoot, 'prisma', 'schema.postgresql.prisma');
 
-if (!isPostgres) {
+if (isPostgres) {
+  console.log('🔄 Syncing PostgreSQL schema for Cloud RDS...');
+  if (fs.existsSync(schemaPostgresPath)) {
+    fs.copyFileSync(schemaPostgresPath, schemaPrismaPath);
+  }
+} else {
   // If SQLite, copy the SQLite schema over schema.prisma
   console.log('🔄 Syncing SQLite schema...');
   fs.copyFileSync(schemaSqlitePath, schemaPrismaPath);
