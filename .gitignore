@@ -35,6 +35,8 @@ override.tf.json
 terraform.rc
 
 # OS and Editor
+*.pem
+*.key
 .DS_Store
 Thumbs.db
 .vscode/

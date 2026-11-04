@@ -10,6 +10,11 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '15'))
     }
 
+    triggers {
+        pollSCM('H/2 * * * *')
+        githubPush()
+    }
+
     parameters {
         choice(name: 'ENVIRONMENT', choices: ['production', 'staging'], description: 'Target AWS environment')
         booleanParam(name: 'RUN_SECURITY_SCAN', defaultValue: true, description: 'Run Trivy container vulnerability scan')
@@ -212,7 +217,12 @@ pipeline {
                             fi
                         """
                     } else {
-                        echo "ℹ️ Windows Jenkins runner: Remote deployment is triggered via cloud agent or deploy script."
+                        bat """
+                            @echo off
+                            echo Deploying updated codebase to live AWS EC2 host (100.58.244.39)...
+                            powershell -ExecutionPolicy Bypass -Command "& { if ((Test-Path 'deploy\\retailmax-aws-key.pem') -or (Test-Path 'C:\\Users\\visha\\Downloads\\retailmax-aws-key.pem')) { powershell -ExecutionPolicy Bypass -File .\\deploy\\deploy-to-ec2.ps1 -Ec2Ip '100.58.244.39' } else { Write-Host 'EC2 private key not found on runner; skipping remote deploy.' } }"
+                            exit /b 0
+                        """
                     }
                 }
             }
@@ -232,10 +242,10 @@ pipeline {
                     } else {
                         powershell """
                             try {
-                                \$res = Invoke-RestMethod -Uri 'http://localhost:5050/health' -TimeoutSec 2
-                                Write-Host "Health check response: \$(\$res.status)"
+                                \$res = Invoke-RestMethod -Uri 'http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/health' -TimeoutSec 5
+                                Write-Host "Live AWS ALB Health Check Status: \$(\$res.status)"
                             } catch {
-                                Write-Host "Local backend idle; live EC2 health verified upon cloud cutover."
+                                Write-Host "Live health check notice: \$(\$_.Exception.Message)"
                             }
                             exit 0
                         """

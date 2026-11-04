@@ -3,8 +3,16 @@
 
 param (
     [string]$Ec2Ip = "100.58.244.39",
-    [string]$KeyPath = "C:\Users\visha\Downloads\retailmax-aws-key.pem"
+    [string]$KeyPath = ""
 )
+
+if (-not $KeyPath -or -not (Test-Path $KeyPath)) {
+    if (Test-Path "$PSScriptRoot\retailmax-aws-key.pem") {
+        $KeyPath = "$PSScriptRoot\retailmax-aws-key.pem"
+    } elseif (Test-Path "C:\Users\visha\Downloads\retailmax-aws-key.pem") {
+        $KeyPath = "C:\Users\visha\Downloads\retailmax-aws-key.pem"
+    }
+}
 
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "🚀 Deploying RetailMax Monolith to AWS EC2 from Windows" -ForegroundColor Cyan
