@@ -7,3 +7,4 @@ test('App initialization and basic routes', async (t) => {
     assert.ok(app);
   });
 });
+
