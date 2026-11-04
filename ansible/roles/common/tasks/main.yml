@@ -1,0 +1,53 @@
+---
+# Common Server Hardening & Package Setup
+- name: Update apt cache and upgrade packages
+  apt:
+    update_cache: yes
+    upgrade: dist
+    cache_valid_time: 3600
+
+- name: Install baseline administrative tools
+  apt:
+    name:
+      - curl
+      - wget
+      - git
+      - ufw
+      - htop
+      - jq
+      - unzip
+      - ca-certificates
+      - software-properties-common
+      - python3-pip
+      - python3-docker
+    state: present
+
+- name: Ensure target application directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  loop:
+    - "{{ app_directory }}"
+    - "{{ app_directory }}/nginx"
+    - "{{ app_directory }}/monitoring"
+    - "{{ app_directory }}/data"
+
+- name: Configure UFW Firewall rules
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - 22    # SSH
+    - 80    # HTTP (Public / ALB)
+    - 443   # HTTPS
+    - 5001  # Blue slot
+    - 5002  # Green slot
+    - 9100  # Node Exporter
+
+- name: Enable UFW Firewall
+  ufw:
+    state: enabled

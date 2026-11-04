@@ -1,0 +1,7 @@
+---
+# Playbook: Zero-Downtime Blue-Green Application Deployment
+- name: Deploy RetailMax Monolith Container with Zero Downtime
+  hosts: app_servers
+  become: yes
+  roles:
+    - retailmax

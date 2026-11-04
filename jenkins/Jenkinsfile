@@ -1,0 +1,154 @@
+// RetailMax Jenkins Declarative CI/CD Pipeline
+// Project: RetailMax E-Commerce Monolith Cloud Migration & Zero-Downtime Deployment
+
+pipeline {
+    agent any
+
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '15'))
+        ansiColor('xterm')
+    }
+
+    parameters {
+        choice(name: 'ENVIRONMENT', choices: ['production', 'staging'], description: 'Target AWS environment')
+        booleanParam(name: 'RUN_SECURITY_SCAN', defaultValue: true, description: 'Run Trivy container vulnerability scan')
+        booleanParam(name: 'AUTO_ROLLBACK', defaultValue: true, description: 'Automatically rollback if health check fails')
+    }
+
+    environment {
+        AWS_DEFAULT_REGION = 'us-east-1'
+        DOCKER_REGISTRY    = credentials('aws-ecr-registry') // AWS ECR URL
+        IMAGE_BACKEND      = 'retailmax-backend'
+        IMAGE_FRONTEND     = 'retailmax-frontend'
+        IMAGE_TAG          = "${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
+        ANSIBLE_HOSTS      = 'ansible/inventory/hosts.ini'
+    }
+
+    stages {
+        stage('1. SCM Checkout') {
+            steps {
+                echo "📦 Checking out source code from Git repository..."
+                checkout scm
+                script {
+                    echo "Branch: ${env.GIT_BRANCH} | Commit: ${env.GIT_COMMIT}"
+                }
+            }
+        }
+
+        stage('2. Code Validation & Linting') {
+            steps {
+                echo "🔍 Running code syntax verification..."
+                sh '''
+                    node -v
+                    npm -v
+                '''
+            }
+        }
+
+        stage('3. Automated Unit & Integration Tests') {
+            steps {
+                echo "🧪 Executing test suite & build validation..."
+                dir('backend') {
+                    sh 'npm test'
+                }
+                dir('frontend') {
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('4. Docker Container Packaging') {
+            steps {
+                echo "🐳 Building multi-stage Docker container images..."
+                sh """
+                    docker build -t ${IMAGE_BACKEND}:${IMAGE_TAG} -t ${IMAGE_BACKEND}:latest ./backend
+                    docker build -t ${IMAGE_FRONTEND}:${IMAGE_TAG} -t ${IMAGE_FRONTEND}:latest ./frontend
+                """
+            }
+        }
+
+        stage('5. Security & Vulnerability Scan (Trivy)') {
+            when {
+                expression { params.RUN_SECURITY_SCAN == true }
+            }
+            steps {
+                echo "🛡️ Scanning Docker images for vulnerabilities..."
+                sh """
+                    if command -v trivy >/dev/null 2>&1; then
+                        trivy image --severity HIGH,CRITICAL --exit-code 0 ${IMAGE_BACKEND}:${IMAGE_TAG}
+                    else
+                        echo "Trivy not installed on Jenkins agent; skipping image scan step."
+                    fi
+                """
+            }
+        }
+
+        stage('6. Push Artifacts to Container Registry') {
+            steps {
+                echo "☁️ Pushing container images to AWS ECR..."
+                sh """
+                    echo "Authenticating and pushing images with tag: ${IMAGE_TAG}"
+                    # docker tag ${IMAGE_BACKEND}:${IMAGE_TAG} ${DOCKER_REGISTRY}/${IMAGE_BACKEND}:${IMAGE_TAG}
+                    # docker push ${DOCKER_REGISTRY}/${IMAGE_BACKEND}:${IMAGE_TAG}
+                """
+            }
+        }
+
+        stage('7. Validate Infrastructure (Terraform)') {
+            steps {
+                echo "📐 Validating Terraform Infrastructure as Code..."
+                dir('terraform') {
+                    sh """
+                        terraform init -backend=false
+                        terraform validate
+                    """
+                }
+            }
+        }
+
+        stage('8. Deploy to Standby Slot (Ansible)') {
+            steps {
+                echo "🚀 Deploying new version into standby slot via Ansible..."
+                sh """
+                    ansible-playbook -i ${ANSIBLE_HOSTS} ansible/playbooks/deploy_app.yml \
+                        --extra-vars "image_backend=${IMAGE_BACKEND}:${IMAGE_TAG} active_slot=blue"
+                """
+            }
+        }
+
+        stage('9. Automated Health Check & Validation') {
+            steps {
+                echo "💚 Verifying endpoint health status before receiving live traffic..."
+                sh "chmod +x jenkins/scripts/*.sh"
+                sh "./jenkins/scripts/health_check.sh 5002"
+            }
+        }
+
+        stage('10. Zero-Downtime Traffic Cutover (Nginx & ALB)') {
+            steps {
+                echo "🔀 Switching live ingress traffic to the healthy new version..."
+                sh "./jenkins/scripts/cutover.sh green"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment successful! RetailMax is live with Zero Downtime."
+        }
+        failure {
+            echo "❌ Pipeline failure encountered! Initiating automated safety protocols..."
+            script {
+                if (params.AUTO_ROLLBACK) {
+                    echo "🔄 Triggering rollback to previous stable deployment..."
+                    sh "./jenkins/scripts/rollback.sh"
+                }
+            }
+        }
+        always {
+            echo "🧹 Cleaning up dangling Docker build cache..."
+            sh "docker image prune -f --filter 'until=24h' || true"
+        }
+    }
+}

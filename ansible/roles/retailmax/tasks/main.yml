@@ -1,0 +1,80 @@
+---
+# RetailMax Monolith Container Deployment & Blue-Green Orchestration
+- name: Determine target slot and port
+  set_fact:
+    target_slot: "{{ 'green' if active_slot == 'blue' else 'blue' }}"
+    target_port: "{{ green_port if active_slot == 'blue' else blue_port }}"
+    idle_slot: "{{ active_slot }}"
+    idle_port: "{{ blue_port if active_slot == 'blue' else green_port }}"
+
+- name: Display deployment target information
+  debug:
+    msg: "Deploying new version to Slot [{{ target_slot }}] on Port [{{ target_port }}]"
+
+- name: Deploy application environment configuration
+  template:
+    src: app.env.j2
+    dest: "{{ app_directory }}/.env.{{ target_slot }}"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+
+- name: Launch RetailMax Container in Target Slot
+  community.docker.docker_container:
+    name: "retailmax-{{ target_slot }}"
+    image: "{{ image_backend }}"
+    state: started
+    restart_policy: always
+    env_file: "{{ app_directory }}/.env.{{ target_slot }}"
+    published_ports:
+      - "{{ target_port }}:5000"
+    networks:
+      - name: "{{ docker_network }}"
+
+- name: Wait for application container to start and initialize
+  pause:
+    seconds: 5
+
+- name: Perform automated health check on new deployment slot
+  uri:
+    url: "http://127.0.0.1:{{ target_port }}/health"
+    status_code: 200
+    return_content: yes
+  register: health_result
+  retries: 10
+  delay: 3
+  until: health_result.status == 200 and ('UP' in health_result.content)
+
+- name: Log Health Check Success
+  debug:
+    msg: "Slot {{ target_slot }} passed health check! Status: UP"
+
+- name: Switch Nginx upstream traffic to the new slot (Zero-Downtime Cutover)
+  template:
+    src: roles/nginx/templates/retailmax_nginx.conf.j2
+    dest: /etc/nginx/sites-available/retailmax.conf
+  vars:
+    active_slot: "{{ target_slot }}"
+  notify: Reload Nginx
+
+- name: Force Nginx reload immediately
+  meta: flush_handlers
+
+- name: Verify live public traffic through Nginx
+  uri:
+    url: "http://127.0.0.1/health"
+    status_code: 200
+  register: live_health
+  retries: 5
+  delay: 2
+  until: live_health.status == 200
+
+- name: Gracefully stop previous idle container slot
+  community.docker.docker_container:
+    name: "retailmax-{{ idle_slot }}"
+    state: stopped
+  ignore_errors: yes
+
+- name: Deployment completed successfully
+  debug:
+    msg: "Deployment complete! Live active slot is now {{ target_slot }} on port {{ target_port }}."

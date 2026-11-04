@@ -1,0 +1,11 @@
+---
+# Master Playbook: End-to-End Server Setup & RetailMax Deployment
+- name: Configure RetailMax Infrastructure Host
+  hosts: app_servers
+  become: yes
+  roles:
+    - common
+    - docker
+    - nginx
+    - retailmax
+    - monitoring

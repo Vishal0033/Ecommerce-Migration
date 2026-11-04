@@ -1,0 +1,49 @@
+---
+# Monitoring Stack Provisioning (Prometheus, Grafana, Node Exporter)
+- name: Create monitoring configuration directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  loop:
+    - "{{ app_directory }}/monitoring/prometheus"
+    - "{{ app_directory }}/monitoring/grafana/dashboards"
+    - "{{ app_directory }}/monitoring/grafana/datasources"
+
+- name: Copy Prometheus configuration file
+  copy:
+    src: ../../../prometheus/prometheus.yml
+    dest: "{{ app_directory }}/monitoring/prometheus/prometheus.yml"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Launch Prometheus container
+  community.docker.docker_container:
+    name: retailmax-prometheus
+    image: prom/prometheus:v2.51.0
+    state: started
+    restart_policy: always
+    published_ports:
+      - "{{ prometheus_port }}:9090"
+    volumes:
+      - "{{ app_directory }}/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
+    networks:
+      - name: "{{ docker_network }}"
+
+- name: Launch Grafana container
+  community.docker.docker_container:
+    name: retailmax-grafana
+    image: grafana/grafana:10.4.0
+    state: started
+    restart_policy: always
+    published_ports:
+      - "{{ grafana_port }}:3000"
+    env:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    networks:
+      - name: "{{ docker_network }}"

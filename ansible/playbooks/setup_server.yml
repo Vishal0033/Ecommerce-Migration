@@ -1,0 +1,10 @@
+---
+# Playbook: Initial Server Software Provisioning & Hardening
+- name: Setup Server Software, Docker, Nginx, and Monitoring
+  hosts: app_servers
+  become: yes
+  roles:
+    - common
+    - docker
+    - nginx
+    - monitoring
