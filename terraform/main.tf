@@ -378,13 +378,14 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
 }
 
 resource "aws_db_instance" "postgres" {
-  identifier             = "${var.project_name}-postgres"
-  engine                 = "postgres"
-  engine_version         = "16.1"
-  instance_class         = var.db_instance_class
-  allocated_storage      = var.db_allocated_storage
-  max_allocated_storage  = 100
-  storage_type           = "gp3"
+  identifier                  = "${var.project_name}-postgres"
+  engine                      = "postgres"
+  engine_version              = "16.3"
+  auto_minor_version_upgrade  = true
+  instance_class              = var.db_instance_class
+  allocated_storage           = var.db_allocated_storage
+  max_allocated_storage       = 100
+  storage_type                = "gp3"
 
   db_name  = var.db_name
   username = var.db_username
