@@ -1,0 +1,17 @@
+{
+  "name": "retailmax-ecommerce-monolith",
+  "version": "1.0.0",
+  "description": "RetailMax E-Commerce Monolith - Ready for Cloud Migration",
+  "scripts": {
+    "db:setup": "npm --prefix backend run db:setup",
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run prisma:generate",
+    "build": "npm run build:backend && npm run build:frontend",
+    "test:backend": "node backend/scripts/test-endpoints.js"
+  },
+  "keywords": ["ecommerce", "monolith", "cloud-migration", "aws", "docker", "devops"],
+  "author": "RetailMax DevOps Team",
+  "license": "ISC"
+}
