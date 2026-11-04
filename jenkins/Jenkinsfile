@@ -18,7 +18,7 @@ pipeline {
 
     environment {
         AWS_DEFAULT_REGION = 'us-east-1'
-        DOCKER_REGISTRY    = credentials('aws-ecr-registry') // AWS ECR URL
+        DOCKER_REGISTRY    = '603694478861.dkr.ecr.us-east-1.amazonaws.com' // AWS ECR URL
         IMAGE_BACKEND      = 'retailmax-backend'
         IMAGE_FRONTEND     = 'retailmax-frontend'
         IMAGE_TAG          = "${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"

@@ -8,7 +8,7 @@ docker_network: retailmax-net
 # Docker image tags
 image_backend: retailmax-backend:latest
 image_frontend: retailmax-frontend:latest
-docker_registry: "" # e.g. <account_id>.dkr.ecr.us-east-1.amazonaws.com/
+docker_registry: "603694478861.dkr.ecr.us-east-1.amazonaws.com/" # e.g. <account_id>.dkr.ecr.us-east-1.amazonaws.com/
 
 # Blue-Green Deployment Configuration
 blue_port: 5001

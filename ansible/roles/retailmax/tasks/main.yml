@@ -22,7 +22,7 @@
 - name: Launch RetailMax Container in Target Slot
   community.docker.docker_container:
     name: "retailmax-{{ target_slot }}"
-    image: "{{ image_backend }}"
+    image: "{{ (docker_registry ~ image_backend) if docker_registry else image_backend }}"
     state: started
     restart_policy: always
     env_file: "{{ app_directory }}/.env.{{ target_slot }}"
