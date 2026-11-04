@@ -1,8 +1,8 @@
 # RetailMax Windows PowerShell Direct Deployer to AWS EC2
-# Usage: .\deploy\deploy-to-ec2.ps1 -Ec2Ip "100.58.244.39" -KeyPath "C:\Users\visha\Downloads\retailmax-aws-key.pem"
+# Usage: .\deploy\deploy-to-ec2.ps1 -Ec2Ip "98.80.58.78"
 
 param (
-    [string]$Ec2Ip = "100.58.244.39",
+    [string]$Ec2Ip = "98.80.58.78",
     [string]$KeyPath = ""
 )
 

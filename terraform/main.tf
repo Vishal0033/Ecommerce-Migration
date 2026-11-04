@@ -293,6 +293,16 @@ resource "aws_instance" "retailmax_server" {
   }
 }
 
+# Permanent Static Elastic IP (Preserves Public IP across Stop/Start cycles)
+resource "aws_eip" "ec2_eip" {
+  instance = aws_instance.retailmax_server.id
+  domain   = "vpc"
+
+  tags = {
+    Name = "${var.project_name}-static-eip"
+  }
+}
+
 # -------------------------------------------------------------
 # 5. APPLICATION LOAD BALANCER & BLUE-GREEN TARGET GROUPS
 # -------------------------------------------------------------

@@ -20,8 +20,8 @@ The complete cloud infrastructure and application stack is live on **Amazon Web 
 | **🛍️ RetailMax Storefront** | [http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com](http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com) | Live public React SPA e-commerce store |
 | **💚 ALB Health Check** | [http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/health](http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/health) | ALB target group health verification (Status: `UP`) |
 | **📦 Products REST API** | [http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/api/products](http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/api/products) | Public API service connected to AWS RDS PostgreSQL |
-| **📊 Grafana Dashboard** | [http://100.58.244.39:3031](http://100.58.244.39:3031) | Real-time observability dashboard (`admin` / `admin`) |
-| **⚡ Prometheus Engine** | [http://100.58.244.39:9091](http://100.58.244.39:9091) | Live application & host metrics scraper |
+| **📊 Grafana Dashboard** | [http://98.80.58.78:3031](http://98.80.58.78:3031) | Real-time observability dashboard (`admin` / `admin`) |
+| **⚡ Prometheus Engine** | [http://98.80.58.78:9091](http://98.80.58.78:9091) | Live application & host metrics scraper |
 | **📈 Raw App Metrics** | [http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/metrics](http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/metrics) | Prometheus-format application telemetry |
 
 ---
@@ -53,7 +53,7 @@ RetailMax is an established online retailer running an e-commerce platform. This
                                   ▼                 ▼
              +─────────────────────────────────────────────────────────+
              │           AWS EC2 Application Host (t3.medium)          │
-             │           Public IP: 100.58.244.39                      │
+             │           Public IP: 98.80.58.78 (Static Elastic IP)    │
              │                                                         │
              │  +───────────────────────────────────────────────────+  │
              │  │   Nginx Ingress & Reverse Proxy (Ports 80/5001)   │  │
@@ -85,7 +85,7 @@ RetailMax is an established online retailer running an e-commerce platform. This
 - **Private Subnets**: `10.0.10.0/24` (`us-east-1a`), `10.0.20.0/24` (`us-east-1b`)
 - **ALB DNS**: `retailmax-alb-1087523635.us-east-1.elb.amazonaws.com`
 - **RDS Endpoint**: `retailmax-postgres.cgxiws0ya25a.us-east-1.rds.amazonaws.com:5432`
-- **EC2 Instance**: `100.58.244.39` (Ubuntu 22.04 LTS, Docker CE, systemd node-exporter)
+- **EC2 Instance**: `98.80.58.78` (Static Elastic IP, Ubuntu 22.04 LTS, Docker CE, systemd node-exporter)
 
 ---
 
@@ -132,7 +132,7 @@ triggers {
 Whenever a developer pushes code to `origin/main`, Jenkins automatically:
 1. Validates syntax and executes test suites.
 2. Builds optimized Docker container images.
-3. Automatically triggers [`deploy/deploy-to-ec2.ps1`](deploy/deploy-to-ec2.ps1) to deploy to the live EC2 host (`100.58.244.39`).
+3. Automatically triggers [`deploy/deploy-to-ec2.ps1`](deploy/deploy-to-ec2.ps1) to deploy to the live EC2 host (`98.80.58.78`).
 4. Runs database schema synchronization (`npx prisma db push`) against AWS RDS.
 5. Verifies live health on the ALB and completes cutover with **zero downtime**.
 
@@ -141,7 +141,7 @@ Whenever a developer pushes code to `origin/main`, Jenkins automatically:
 ## 📊 Monitoring & Observability Stack
 
 ### 1. Grafana Performance Dashboard
-- **URL**: [http://100.58.244.39:3031](http://100.58.244.39:3031)
+- **URL**: [http://98.80.58.78:3031](http://98.80.58.78:3031)
 - **Credentials**: `admin` / `admin`
 - **Pre-provisioned Dashboard**: **RetailMax Telemetry Dashboard**
 - **Panels**:
@@ -153,7 +153,7 @@ Whenever a developer pushes code to `origin/main`, Jenkins automatically:
   - Business KPIs: Total Orders Placed & Cumulative Revenue
 
 ### 2. Prometheus Metrics
-- **URL**: [http://100.58.244.39:9091](http://100.58.244.39:9091)
+- **URL**: [http://98.80.58.78:9091](http://98.80.58.78:9091)
 - Scrapes the application every 10 seconds via `/metrics`.
 - Health status visible at `Status ➔ Targets`.
 
@@ -200,7 +200,7 @@ Spins up the full stack locally with PostgreSQL (`5434`), Backend (`5050`), Fron
 
 To deploy the latest changes to the live AWS EC2 host directly:
 ```powershell
-.\deploy\deploy-to-ec2.ps1 -Ec2Ip "100.58.244.39" -KeyPath "C:\path\to\retailmax-aws-key.pem"
+.\deploy\deploy-to-ec2.ps1 -Ec2Ip "98.80.58.78"
 ```
 
 ---

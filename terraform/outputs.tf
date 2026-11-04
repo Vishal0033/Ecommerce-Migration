@@ -6,8 +6,8 @@ output "vpc_id" {
 }
 
 output "ec2_public_ip" {
-  description = "Public IP of the EC2 instance hosting the containerized monolith"
-  value       = aws_instance.retailmax_server.public_ip
+  description = "Static Elastic IP of the EC2 instance hosting the containerized monolith"
+  value       = aws_eip.ec2_eip.public_ip
 }
 
 output "alb_dns_name" {
