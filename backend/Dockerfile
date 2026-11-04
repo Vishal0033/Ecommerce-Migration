@@ -12,11 +12,11 @@ COPY prisma ./prisma/
 
 RUN npm ci
 
-# Generate Prisma Client (use PostgreSQL schema for container builds)
-RUN if [ -f prisma/schema.postgresql.prisma ]; then cp prisma/schema.postgresql.prisma prisma/schema.prisma; fi && npx prisma generate
-
 # Copy source code
 COPY . .
+
+# Enforce PostgreSQL schema for container builds & generate client
+RUN cp prisma/schema.postgresql.prisma prisma/schema.prisma && npx prisma generate
 
 # Runner stage
 FROM node:20-slim AS runner
