@@ -1,148 +1,273 @@
 # RetailMax: E-Commerce Monolith Cloud Migration Platform
 
 [![Architecture: Layered Monolith](https://img.shields.io/badge/Architecture-Clean%20Layered%20Monolith-blue.svg)](docs/ARCHITECTURE.md)
-[![Database: Prisma + Postgres](https://img.shields.io/badge/Database-Prisma%20ORM%20%2B%20PostgreSQL-336791.svg)](https://prisma.io)
-[![Observability: Prometheus](https://img.shields.io/badge/Metrics-Prometheus%20Scrapable-E6522C.svg)](docs/MIGRATION_GUIDE.md)
-[![Deployment: Zero--Downtime](https://img.shields.io/badge/Releases-Nginx%20Blue--Green-22c55e.svg)](docs/MIGRATION_GUIDE.md)
+[![Database: AWS RDS PostgreSQL](https://img.shields.io/badge/Database-AWS%20RDS%20PostgreSQL%2016-336791.svg)](https://aws.amazon.com/rds/)
+[![IaC: Terraform](https://img.shields.io/badge/IaC-HashiCorp%20Terraform-7B42BC.svg)](terraform/)
+[![CI/CD: Jenkins Pipeline](https://img.shields.io/badge/CI%2FCD-Jenkins%20Declarative%20Pipeline-D24939.svg)](jenkins/Jenkinsfile)
+[![Observability: Prometheus & Grafana](https://img.shields.io/badge/Observability-Prometheus%20%2B%20Grafana-F46800.svg)](monitoring/)
+[![Releases: Zero-Downtime](https://img.shields.io/badge/Releases-Nginx%20Blue--Green-22c55e.svg)](docs/MIGRATION_GUIDE.md)
 
-> Modern full-stack e-commerce monolithic application built for automated DevOps deployment, AWS cloud migration, and zero-downtime releases.
-
----
-
-## 📌 Project Overview
-**RetailMax** is an established online retailer running a monolithic e-commerce application. This project develops the modern full-stack application from scratch with clean architectural separation of concerns, ready to be migrated to the AWS Cloud using automated DevOps pipelines (Terraform, Ansible, Jenkins, Docker, Nginx Blue-Green, Prometheus, and Grafana).
-
-### Core Features:
-- 🛍️ **User Experience**: Browse high-res product catalog, filter by category, price, and search, view rich details, stock counters, and reviews.
-- 🛒 **Cart & Checkout**: Persistent cart (guest and authenticated), atomic inventory deduction with stock locks, shipping address forms, and multiple payment methods.
-- 📦 **Order Tracking**: Order lifecycle management (`PENDING` ➔ `PROCESSING` ➔ `SHIPPED` ➔ `DELIVERED`), invoice viewing, and order history.
-- 🛡️ **Admin Portal**: Revenue statistics, inventory management (Create, Read, Update, Delete products), stock adjustments, and order fulfillment controls.
-- 🔒 **Security**: Salted bcrypt password hashing, JWT stateless authentication, Helmet HTTP protection headers, rate limiting, and Zod input validation.
-- 📊 **DevOps & Observability**: Dedicated `/health` endpoint for AWS Application Load Balancer health checks and `/metrics` endpoint with Prometheus client metrics.
+> Enterprise-grade full-stack e-commerce monolithic application engineered for automated DevOps provisioning, continuous integration & deployment, zero-downtime Blue-Green cloud cutover, and high-availability AWS cloud hosting.
 
 ---
 
-## 🏗️ Technology Stack
+## 🌐 Live Cloud Deployment Endpoints
 
-| Component | Technology | Description |
-|---|---|---|
-| **Frontend** | React 18, Tailwind CSS, Vite | Responsive Single Page App with Lucide icons |
-| **Backend** | Node.js, Express.js | Layered Monolith (Routes, Controllers, Services, Repositories) |
-| **ORM & DB** | Prisma ORM, PostgreSQL (Cloud) / SQLite (Dev) | Type-safe queries, migrations, atomic transactions |
-| **Security** | JWT, bcryptjs, Helmet, Zod, Rate Limiting | Comprehensive security suite |
-| **DevOps & CI/CD**| Docker, Docker Compose, Nginx, Jenkins | Container packaging, reverse proxy, Blue-Green |
-| **IaC & Config** | Terraform, Ansible | AWS VPC, EC2, ALB, automated server setups |
-| **Observability** | Prometheus, Grafana | Latency histograms, throughput counters, business gauges |
+The complete cloud infrastructure and application stack is live on **Amazon Web Services (AWS)**:
+
+| Service | Endpoint URL | Description |
+| :--- | :--- | :--- |
+| **🛍️ RetailMax Storefront** | [http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com](http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com) | Live public React SPA e-commerce store |
+| **💚 ALB Health Check** | [http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/health](http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/health) | ALB target group health verification (Status: `UP`) |
+| **📦 Products REST API** | [http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/api/products](http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/api/products) | Public API service connected to AWS RDS PostgreSQL |
+| **📊 Grafana Dashboard** | [http://100.58.244.39:3031](http://100.58.244.39:3031) | Real-time observability dashboard (`admin` / `admin`) |
+| **⚡ Prometheus Engine** | [http://100.58.244.39:9091](http://100.58.244.39:9091) | Live application & host metrics scraper |
+| **📈 Raw App Metrics** | [http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/metrics](http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/metrics) | Prometheus-format application telemetry |
 
 ---
 
-## 📁 Project Architecture & Structure
+## 📌 Project Overview & Cloud Migration Objectives
+
+RetailMax is an established online retailer running an e-commerce platform. This project delivers the modernization and complete migration lifecycle from local development to production on AWS:
+
+1. **Modular Layered Monolith Architecture**: Built with strict separation of concerns across Config, Middlewares, Validators (Zod), Controllers, Services, and Repositories (Prisma ORM).
+2. **Infrastructure as Code (IaC)**: Fully provisioned AWS VPC, Public/Private Subnets across 2 Availability Zones, Security Groups, Application Load Balancer with Blue/Green Target Groups, and managed RDS PostgreSQL 16 database.
+3. **Automated CI/CD Pipeline**: 10-stage Jenkins declarative pipeline with automated SCM polling (`pollSCM`), Docker multi-stage builds, Trivy vulnerability scanning, automated cloud deployment, and zero-downtime cutover.
+4. **Zero-Downtime Blue-Green Deployment**: Nginx reverse proxy and AWS ALB target groups enable seamless slot switching without customer disruption or dropped connections.
+5. **Full-Stack Observability**: Native Prometheus instrumentation exposing latency histograms, request rates, error rates, Node.js runtime telemetry, and interactive Grafana dashboards.
+
+---
+
+## 🏗️ Architecture & Cloud Infrastructure
+
+```
+                                  [ Internet Users ]
+                                           │
+                                           ▼ (Port 80)
+                       +---------------------------------------+
+                       │    AWS Application Load Balancer      │
+                       │    (retailmax-alb - Dual-AZ)          │
+                       +---------------------------------------+
+                                  │                 │
+                (Blue Slot : 5001)│                 │(Green Slot : 5002)
+                                  ▼                 ▼
+             +─────────────────────────────────────────────────────────+
+             │           AWS EC2 Application Host (t3.medium)          │
+             │           Public IP: 100.58.244.39                      │
+             │                                                         │
+             │  +───────────────────────────────────────────────────+  │
+             │  │   Nginx Ingress & Reverse Proxy (Ports 80/5001)   │  │
+             │  +───────────────────────────────────────────────────+  │
+             │          │                                   │          │
+             │          ▼                                   ▼          │
+             │  +───────────────────+               +───────────────+  │
+             │  │  React Frontend   │               │  Express API  │  │
+             │  │  SPA (Port 3030)  │               │  (Port 5050)  │  │
+             │  +───────────────────+               +───────┬───────+  │
+             │                                              │          │
+             │  +─────────────────────+             +───────▼───────+  │
+             │  │  Grafana Dashboard  │◄────────────│  Prometheus   │  │
+             │  │  (Port 3031)        │  (Metrics)  │  (Port 9091)  │  │
+             │  +─────────────────────+             +───────────────+  │
+             +──────────────────────────────────────────────┬──────────+
+                                                            │
+                                        (Port 5432 - VPC Private Subnet)
+                                                            ▼
+                                        +──────────────────────────────+
+                                        │   AWS RDS Managed Database   │
+                                        │   PostgreSQL 16.3 (Dual-AZ)  │
+                                        +──────────────────────────────+
+```
+
+### AWS Cloud Resource Breakdown:
+- **VPC ID**: `vpc-0e7126c4e7b8856b8` (CIDR `10.0.0.0/16`)
+- **Public Subnets**: `10.0.1.0/24` (`us-east-1a`), `10.0.2.0/24` (`us-east-1b`)
+- **Private Subnets**: `10.0.10.0/24` (`us-east-1a`), `10.0.20.0/24` (`us-east-1b`)
+- **ALB DNS**: `retailmax-alb-1087523635.us-east-1.elb.amazonaws.com`
+- **RDS Endpoint**: `retailmax-postgres.cgxiws0ya25a.us-east-1.rds.amazonaws.com:5432`
+- **EC2 Instance**: `100.58.244.39` (Ubuntu 22.04 LTS, Docker CE, systemd node-exporter)
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Component | Description |
+| :--- | :--- | :--- |
+| **Frontend** | React 18, Vite, Tailwind CSS, Lucide Icons | Responsive SPA with catalog, drawer cart, checkout, admin |
+| **Backend** | Node.js 20, Express.js | Layered Monolith with JWT, Helmet, Rate Limiter, CORS |
+| **ORM & Database** | Prisma ORM, PostgreSQL 16 (AWS RDS) | Type-safe migrations, atomic transactions, connection pooling |
+| **IaC** | HashiCorp Terraform | VPC, ALB, Target Groups, EC2, RDS, IAM Roles, Security Groups |
+| **CI/CD** | Jenkins Declarative Pipeline | Cross-platform (Windows & Linux), automated SCM polling |
+| **Containers** | Docker Engine, Docker Compose | Multi-stage production builds with Debian Slim & Alpine |
+| **Reverse Proxy** | Nginx 1.25 Alpine | Blue-Green traffic switching, static SPA serving, API routing |
+| **Observability** | Prometheus 2.51, Grafana 10.4 | Telemetry scrapers, PromQL, pre-provisioned dashboards |
+
+---
+
+## 🔄 Automated CI/CD Pipeline (Jenkins)
+
+The pipeline is defined in [`jenkins/Jenkinsfile`](jenkins/Jenkinsfile) and executes **10 automated stages**:
+
+```mermaid
+flowchart LR
+    A["1. SCM Checkout"] --> B["2. Syntax & Lint"]
+    B --> C["3. Automated Tests"]
+    C --> D["4. Docker Build"]
+    D --> E["5. Trivy Security Scan"]
+    E --> F["6. Push to AWS ECR"]
+    F --> G["7. Terraform Validate"]
+    G --> H["8. Deploy to EC2"]
+    H --> I["9. Health Verification"]
+    I --> J["10. Blue-Green Cutover"]
+```
+
+### Automatic Triggering on Code Push:
+The pipeline includes automated SCM polling triggers:
+```groovy
+triggers {
+    pollSCM('H/2 * * * *')  // Polls GitHub every 2 minutes for changes on branch 'main'
+    githubPush()            // Instant trigger on GitHub Webhook push
+}
+```
+Whenever a developer pushes code to `origin/main`, Jenkins automatically:
+1. Validates syntax and executes test suites.
+2. Builds optimized Docker container images.
+3. Automatically triggers [`deploy/deploy-to-ec2.ps1`](deploy/deploy-to-ec2.ps1) to deploy to the live EC2 host (`100.58.244.39`).
+4. Runs database schema synchronization (`npx prisma db push`) against AWS RDS.
+5. Verifies live health on the ALB and completes cutover with **zero downtime**.
+
+---
+
+## 📊 Monitoring & Observability Stack
+
+### 1. Grafana Performance Dashboard
+- **URL**: [http://100.58.244.39:3031](http://100.58.244.39:3031)
+- **Credentials**: `admin` / `admin`
+- **Pre-provisioned Dashboard**: **RetailMax Telemetry Dashboard**
+- **Panels**:
+  - Request Throughput (Req/sec)
+  - P50, P90, P99 Response Latency
+  - HTTP Status Code breakdown (`2xx`, `3xx`, `4xx`, `5xx`)
+  - Node.js Heap & RSS Memory Consumption
+  - Event Loop Lag
+  - Business KPIs: Total Orders Placed & Cumulative Revenue
+
+### 2. Prometheus Metrics
+- **URL**: [http://100.58.244.39:9091](http://100.58.244.39:9091)
+- Scrapes the application every 10 seconds via `/metrics`.
+- Health status visible at `Status ➔ Targets`.
+
+---
+
+## 🔑 Demo & Testing Credentials
+
+| Role | Email | Password | Access & Capabilities |
+| :--- | :--- | :--- | :--- |
+| **Administrator** | `admin@retailmax.com` | `Admin@123` | Full Admin Dashboard (`/admin`), product CRUD, order status fulfillment |
+| **Customer** | `user@retailmax.com` | `User@123` | Product catalog, cart persistence, checkout, order history |
+
+> *Self-Registration: You can also click **"Create Account"** on the live website to register a brand-new user with immediate persistence in AWS RDS PostgreSQL.*
+
+---
+
+## 💻 Local Development Setup
+
+### 1. Clone & Install
+```bash
+git clone https://github.com/Vishal0033/Ecommerce-Migration.git
+cd "Ecommerce Migration"
+npm run db:setup
+```
+
+### 2. Run Local Servers
+```bash
+# Start backend API (Port 5050)
+npm run backend
+
+# In a separate terminal, start frontend (Port 5174)
+npm run frontend
+```
+
+### 3. Full Local Docker Stack
+```bash
+docker-compose up --build
+```
+Spins up the full stack locally with PostgreSQL (`5434`), Backend (`5050`), Frontend (`3030`), Nginx (`80`), Prometheus (`9091`), and Grafana (`3031`).
+
+---
+
+## ☁️ Manual Deployment to EC2
+
+To deploy the latest changes to the live AWS EC2 host directly:
+```powershell
+.\deploy\deploy-to-ec2.ps1 -Ec2Ip "100.58.244.39" -KeyPath "C:\path\to\retailmax-aws-key.pem"
+```
+
+---
+
+## 📂 Project Directory Structure
 
 ```
 Ecommerce Migration/
 ├── backend/
 │   ├── prisma/
-│   │   ├── schema.prisma          # PostgreSQL target schema (Cloud / AWS)
-│   │   ├── schema.sqlite.prisma   # SQLite schema (Zero-setup local dev)
-│   │   └── seed.js                # Database seeder (Admin, Users, Products)
+│   │   ├── schema.prisma              # Active Prisma schema
+│   │   ├── schema.postgresql.prisma   # PostgreSQL AWS RDS schema
+│   │   ├── schema.sqlite.prisma       # Local dev SQLite schema
+│   │   └── seed.js                    # Idempotent DB seeder
 │   ├── src/
-│   │   ├── config/                # Environment, Prisma singleton, Logger
-│   │   ├── controllers/           # HTTP controllers
-│   │   ├── services/              # Pure business logic & order processing
-│   │   ├── repositories/          # Prisma database access layer
-│   │   ├── middlewares/           # Auth, Roles, Validation, Error, Metrics
-│   │   ├── validators/            # Zod validation schemas
-│   │   ├── metrics/               # Prometheus prom-client metrics
-│   │   ├── routes/                # Express routing endpoints
-│   │   ├── app.js                 # Express app configuration
-│   │   └── server.js              # Server entry point & graceful shutdown
-│   ├── Dockerfile                 # Production multi-stage Dockerfile
+│   │   ├── config/                    # Environment, Prisma Client, Logger
+│   │   ├── controllers/               # Auth, Products, Cart, Orders, Admin
+│   │   ├── middlewares/               # Security, RateLimit, JWT, Metrics
+│   │   ├── repositories/              # Prisma data access layer
+│   │   ├── routes/                    # API route endpoints
+│   │   ├── services/                  # Business logic & transaction engine
+│   │   ├── validators/                # Zod schemas
+│   │   ├── app.js                     # Express app setup
+│   │   └── server.js                  # HTTP server & graceful shutdown
+│   ├── Dockerfile                     # Multi-stage production container
 │   └── package.json
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── components/            # Reusable UI (Navbar, Footer, ProductCard, CartDrawer, etc.)
-│   │   ├── context/               # AuthContext, CartContext
-│   │   ├── pages/                 # Home, Products, ProductDetails, Cart, Checkout, Admin, Orders
-│   │   ├── services/ & utils/     # Axios client, currency & date formatters
-│   │   ├── App.jsx                # Routing configuration
-│   │   └── main.jsx
-│   ├── Dockerfile                 # Multi-stage Dockerfile with Nginx
+│   │   ├── components/                # Navbar, Footer, ProductCard, CartDrawer
+│   │   ├── context/                   # AuthContext, CartContext
+│   │   ├── pages/                     # Storefront, Detail, Cart, Orders, Admin
+│   │   ├── utils/                     # Axios API client (relative /api routing)
+│   │   └── App.jsx
+│   ├── Dockerfile                     # React build served via Nginx
 │   └── package.json
 │
-├── nginx/
-│   └── nginx.conf                 # Nginx Blue-Green reverse proxy & load balancer
-├── prometheus/
-│   └── prometheus.yml             # Prometheus metric scraper config
-├── docker-compose.yml             # Full-stack local orchestration (App + Postgres + Prometheus + Grafana)
-├── docs/
-│   ├── ARCHITECTURE.md            # In-depth architectural design
-│   ├── API_DOCS.md                # Full REST API specifications
-│   └── MIGRATION_GUIDE.md         # AWS Cloud Migration roadmap
-└── package.json
+├── terraform/                         # AWS Infrastructure as Code
+│   ├── main.tf                        # VPC, Subnets, ALB, EC2, RDS, SG
+│   ├── provider.tf                    # AWS Provider definition
+│   ├── variables.tf                   # Configurable IaC parameters
+│   ├── outputs.tf                     # ALB DNS, EC2 IP, RDS Endpoint
+│   └── user_data.sh                   # EC2 cloud-init provisioning
+│
+├── ansible/                           # Configuration Management
+│   ├── inventory/hosts.ini            # EC2 Host inventory
+│   ├── playbooks/site.yml             # Master deployment playbook
+│   └── roles/                         # Docker, Nginx, RetailMax, Monitoring
+│
+├── jenkins/
+│   └── Jenkinsfile                    # 10-Stage Declarative CI/CD Pipeline
+│
+├── monitoring/
+│   ├── prometheus/prometheus.yml      # Metrics scraper config
+│   └── grafana/                       # Dashboards & Datasource provisioning
+│
+├── deploy/
+│   └── deploy-to-ec2.ps1              # Direct EC2 deployment runner
+│
+├── docker-compose.prod.yml            # Production cloud container stack
+├── docker-compose.yml                 # Local dev full stack
+└── README.md
 ```
 
 ---
 
-## ⚡ Quick Start Guide (Local Development)
-
-### 1. Prerequisites
-- Node.js (v18+)
-- npm (v9+)
-
-### 2. Setup the Database & Seed Sample Data
-Run the cross-platform setup script to initialize the database with categories, products, and test accounts:
-```bash
-npm run db:setup
-```
-
-### 3. Start the Backend API
-```bash
-npm run backend
-```
-The API server will start on `http://localhost:5050`:
-- 💚 **Health Status**: `http://localhost:5050/health`
-- 📊 **Prometheus Metrics**: `http://localhost:5050/metrics`
-- 🌐 **API Base**: `http://localhost:5050/api`
-
-### 4. Start the Frontend Application
-In a separate terminal:
-```bash
-npm run frontend
-```
-The React application will launch at `http://localhost:5174`.
-
----
-
-## 🔑 Demo Credentials
-
-| Role | Email | Password | Permissions |
-|---|---|---|---|
-| **Administrator** | `admin@retailmax.com` | `Admin@123` | Full dashboard access, product CRUD, order status updater |
-| **Customer** | `user@retailmax.com` | `User@123` | Browse catalog, shopping cart, checkout, order history |
-
-> *Note: On the login page, you can also click the 1-Click Demo buttons to log in instantly!*
-
----
-
-## 🐳 Docker & Cloud Migration Orchestration
-
-To run the complete production-grade cloud stack locally with Docker Compose:
-```bash
-docker-compose up --build
-```
-This spins up:
-1. `retailmax-postgres`: PostgreSQL 16 database with persistent storage.
-2. `retailmax-backend`: Express monolith API with automated database migrations.
-3. `retailmax-frontend`: Static React build served through Nginx.
-4. `retailmax-nginx-lb`: Reverse proxy configured for Blue-Green traffic routing.
-5. `retailmax-prometheus`: Scrapes metrics from `:5000/metrics`.
-6. `retailmax-grafana`: Dashboards available on `http://localhost:3031` (user: `admin`, pass: `admin`).
-
----
-
-## 📚 Documentation
-- [System Architecture & Separation of Concerns](docs/ARCHITECTURE.md)
-- [REST API Specifications](docs/API_DOCS.md)
-- [AWS Cloud Migration Guide](docs/MIGRATION_GUIDE.md)
-
+## 📜 Documentation Links
+- 📘 [Architectural Design Document](docs/ARCHITECTURE.md)
+- 📗 [REST API Specification](docs/API_DOCS.md)
+- 📙 [AWS Cloud Migration Guide](docs/MIGRATION_GUIDE.md)
