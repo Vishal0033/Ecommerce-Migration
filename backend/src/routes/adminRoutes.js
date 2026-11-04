@@ -19,3 +19,4 @@ router.get('/orders', getAllOrders);
 router.patch('/orders/:id/status', validateBody(updateOrderStatusSchema), updateOrderStatus);
 
 export default router;
+

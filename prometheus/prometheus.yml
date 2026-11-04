@@ -11,3 +11,4 @@ scrape_configs:
         labels:
           environment: 'production'
           app: 'retailmax-monolith'
+

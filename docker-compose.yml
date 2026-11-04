@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: securepassword123
       POSTGRES_DB: retailmax_db
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -37,7 +37,7 @@ services:
       JWT_EXPIRES_IN: 7d
       CLIENT_URL: http://localhost:80
     ports:
-      - "5000:5000"
+      - "5050:5000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,7 +52,7 @@ services:
     container_name: retailmax-frontend
     restart: always
     ports:
-      - "3000:80"
+      - "3030:80"
     depends_on:
       - backend
     networks:
@@ -79,7 +79,7 @@ services:
     container_name: retailmax-prometheus
     restart: always
     ports:
-      - "9090:9090"
+      - "9091:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -94,7 +94,7 @@ services:
     container_name: retailmax-grafana
     restart: always
     ports:
-      - "3001:3000"
+      - "3031:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin

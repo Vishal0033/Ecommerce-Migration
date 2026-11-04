@@ -11,3 +11,4 @@ router.post('/login', validateBody(loginSchema), login);
 router.get('/me', authenticate, getMe);
 
 export default router;
+

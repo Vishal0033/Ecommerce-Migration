@@ -13,3 +13,4 @@ export const sendError = (res, message = 'Internal Server Error', statusCode = 5
     errors,
   });
 };
+

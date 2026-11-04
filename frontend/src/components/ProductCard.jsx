@@ -113,3 +113,4 @@ export const ProductCard = ({ product }) => {
     </div>
   );
 };
+

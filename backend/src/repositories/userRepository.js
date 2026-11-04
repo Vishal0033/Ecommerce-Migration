@@ -41,3 +41,4 @@ export const userRepository = {
     return await prisma.user.count();
   },
 };
+

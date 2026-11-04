@@ -33,3 +33,4 @@ export const validateQuery = (schema) => (req, res, next) => {
     return next(error);
   }
 };
+

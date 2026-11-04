@@ -89,3 +89,4 @@ A Jenkins pipeline triggers on code commits to `main`:
   - Web traffic latency percentiles (p50, p95, p99).
   - Business KPIs (Orders placed, revenue processed).
 - Alerting rules trigger notifications if error rates exceed 1% or health check returns `DOWN`.
+

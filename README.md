@@ -100,17 +100,17 @@ npm run db:setup
 ```bash
 npm run backend
 ```
-The API server will start on `http://localhost:5000`:
-- 💚 **Health Status**: `http://localhost:5000/health`
-- 📊 **Prometheus Metrics**: `http://localhost:5000/metrics`
-- 🌐 **API Base**: `http://localhost:5000/api`
+The API server will start on `http://localhost:5050`:
+- 💚 **Health Status**: `http://localhost:5050/health`
+- 📊 **Prometheus Metrics**: `http://localhost:5050/metrics`
+- 🌐 **API Base**: `http://localhost:5050/api`
 
 ### 4. Start the Frontend Application
 In a separate terminal:
 ```bash
 npm run frontend
 ```
-The React application will launch at `http://localhost:5173`.
+The React application will launch at `http://localhost:5174`.
 
 ---
 
@@ -137,7 +137,7 @@ This spins up:
 3. `retailmax-frontend`: Static React build served through Nginx.
 4. `retailmax-nginx-lb`: Reverse proxy configured for Blue-Green traffic routing.
 5. `retailmax-prometheus`: Scrapes metrics from `:5000/metrics`.
-6. `retailmax-grafana`: Dashboards available on `http://localhost:3001` (user: `admin`, pass: `admin`).
+6. `retailmax-grafana`: Dashboards available on `http://localhost:3031` (user: `admin`, pass: `admin`).
 
 ---
 
@@ -145,3 +145,4 @@ This spins up:
 - [System Architecture & Separation of Concerns](docs/ARCHITECTURE.md)
 - [REST API Specifications](docs/API_DOCS.md)
 - [AWS Cloud Migration Guide](docs/MIGRATION_GUIDE.md)
+

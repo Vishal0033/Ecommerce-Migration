@@ -39,3 +39,4 @@ export const totalRevenueGauge = new client.Gauge({
   help: 'Total cumulative revenue processed',
 });
 register.registerMetric(totalRevenueGauge);
+

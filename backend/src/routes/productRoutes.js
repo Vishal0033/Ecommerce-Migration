@@ -43,3 +43,4 @@ router.put(
 router.delete('/:id', authenticate, requireRole('ADMIN'), deleteProduct);
 
 export default router;
+

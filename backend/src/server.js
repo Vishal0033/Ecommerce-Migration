@@ -47,3 +47,4 @@ process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception thrown:', error);
   process.exit(1);
 });
+

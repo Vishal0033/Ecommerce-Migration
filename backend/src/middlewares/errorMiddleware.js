@@ -34,3 +34,4 @@ export const errorHandler = (err, req, res, next) => {
 
   return sendError(res, message, statusCode, errors);
 };
+

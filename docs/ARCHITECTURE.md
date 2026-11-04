@@ -73,3 +73,4 @@
   - `retailmax_http_requests_total` (Request counter)
   - `retailmax_orders_total` (Order transaction counter)
   - `retailmax_revenue_total_dollars` (Cumulative gross revenue)
+

@@ -22,3 +22,4 @@ export const productQuerySchema = z.object({
   page: z.string().optional(),
   limit: z.string().optional(),
 });
+

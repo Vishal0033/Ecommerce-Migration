@@ -129,3 +129,4 @@ Base URL: `http://localhost:5000/api` (or `/` for system endpoints)
 
 ### `PATCH /api/admin/orders/:id/status`
 - **Body**: `{ "status": "SHIPPED" }` (PENDING | PROCESSING | SHIPPED | DELIVERED | CANCELLED)
+

@@ -104,3 +104,4 @@ model OrderItem {
   @@index([productId])
   @@map("order_items")
 }
+

@@ -43,3 +43,4 @@ try {
   console.error('\n❌ Error setting up database:', error.message);
   process.exit(1);
 }
+

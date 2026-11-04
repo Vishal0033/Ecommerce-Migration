@@ -29,3 +29,4 @@ export const checkDbConnection = async () => {
 };
 
 export default prisma;
+

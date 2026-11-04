@@ -78,3 +78,4 @@ export const productService = {
     return await productRepository.findAllCategories();
   },
 };
+

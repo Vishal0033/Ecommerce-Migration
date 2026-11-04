@@ -349,3 +349,4 @@ export const CheckoutPage = () => {
     </div>
   );
 };
+

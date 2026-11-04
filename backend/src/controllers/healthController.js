@@ -24,3 +24,4 @@ export const getHealth = async (req, res) => {
 
   return res.status(isHealthy ? 200 : 503).json(healthData);
 };
+
