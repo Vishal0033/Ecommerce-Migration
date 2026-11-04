@@ -51,22 +51,22 @@ pipeline {
 
         stage('3. Automated Unit & Integration Tests') {
             steps {
-                echo "🧪 Executing test suite & build validation..."
+                echo "🧪 Installing dependencies & executing tests..."
                 dir('backend') {
                     script {
                         if (isUnix()) {
-                            sh "npm test"
+                            sh "npm install --prefer-offline --no-audit && npx prisma generate && npm test"
                         } else {
-                            bat "npm test"
+                            bat "call npm install --prefer-offline --no-audit && call npx prisma generate && call npm test"
                         }
                     }
                 }
                 dir('frontend') {
                     script {
                         if (isUnix()) {
-                            sh "npm run build"
+                            sh "npm install --prefer-offline --no-audit && npm run build"
                         } else {
-                            bat "npm run build"
+                            bat "call npm install --prefer-offline --no-audit && call npm run build"
                         }
                     }
                 }
