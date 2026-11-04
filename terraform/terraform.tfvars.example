@@ -13,3 +13,4 @@ db_allocated_storage = 20
 db_name            = "retailmax_db"
 db_username        = "retailmax_admin"
 db_password        = "RetailMaxSecurePass2026!"
+

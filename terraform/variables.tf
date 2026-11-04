@@ -93,3 +93,4 @@ variable "db_password" {
   sensitive   = true
   default     = "RetailMaxSecurePass2026!"
 }
+

@@ -401,3 +401,4 @@ resource "aws_db_instance" "postgres" {
     Name = "${var.project_name}-postgres-db"
   }
 }
+

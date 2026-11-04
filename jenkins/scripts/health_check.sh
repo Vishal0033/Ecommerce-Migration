@@ -40,3 +40,4 @@ done
 echo "❌ ERROR: Health check timed out after ${MAX_ATTEMPTS} attempts."
 echo "Aborting deployment to protect customer traffic."
 exit 1
+

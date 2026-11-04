@@ -64,3 +64,4 @@ echo "================================================================="
 echo "🎉 RetailMax Cloud Migration COMPLETED!"
 echo "   Access Live Store via AWS ALB: http://$ALB_DNS"
 echo "================================================================="
+

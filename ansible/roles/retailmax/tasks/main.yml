@@ -78,3 +78,4 @@
 - name: Deployment completed successfully
   debug:
     msg: "Deployment complete! Live active slot is now {{ target_slot }} on port {{ target_port }}."
+

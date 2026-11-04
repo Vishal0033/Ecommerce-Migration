@@ -51,3 +51,4 @@ if command -v nginx >/dev/null 2>&1; then
 else
     echo "ℹ️ Rollback simulated successfully."
 fi
+

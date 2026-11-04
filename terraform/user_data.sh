@@ -73,3 +73,4 @@ echo "=== [5/5] Bootstrap completed successfully ==="
 docker --version
 docker compose version
 echo "RetailMax Host initialization finished at $(date)" > /var/log/retailmax-bootstrap.log
+
