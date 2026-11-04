@@ -15,8 +15,8 @@ blue_port: 5001
 green_port: 5002
 active_slot: "blue" # Set dynamically to "blue" or "green" during zero-downtime cutover
 
-# Database Connection (AWS RDS or containerized)
-db_host: "localhost" # or AWS RDS endpoint from Terraform output
+# Database Connection (Managed AWS RDS PostgreSQL)
+db_host: "retailmax-postgres.cgxiws0ya25a.us-east-1.rds.amazonaws.com"
 db_port: 5432
 db_name: "retailmax_db"
 db_user: "retailmax_admin"

@@ -20,3 +20,4 @@ Write-Host "   - RDS Compute Cost:  $0.00 / hr" -ForegroundColor Green
 Write-Host "   - Static IP:         98.80.58.78 (Preserved permanently)" -ForegroundColor Green
 Write-Host "   - Restart anytime:   .\deploy\start-aws.ps1" -ForegroundColor Yellow
 Write-Host "==========================================================" -ForegroundColor Cyan
+

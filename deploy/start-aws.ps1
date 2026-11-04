@@ -30,3 +30,4 @@ try {
 } catch {
     Write-Host "Note: Database and ALB health checks typically take 1-2 minutes to report healthy." -ForegroundColor Gray
 }
+
