@@ -162,6 +162,22 @@ resource "aws_security_group" "ec2_sg" {
     cidr_blocks = [var.vpc_cidr]
   }
 
+  ingress {
+    description = "Grafana Observability Dashboard"
+    from_port   = 3031
+    to_port     = 3031
+    protocol    = "tcp"
+    cidr_blocks = var.admin_cidr_blocks
+  }
+
+  ingress {
+    description = "Prometheus Server Web UI"
+    from_port   = 9091
+    to_port     = 9091
+    protocol    = "tcp"
+    cidr_blocks = var.admin_cidr_blocks
+  }
+
   egress {
     description = "Allow all outbound traffic (internet & package downloads)"
     from_port   = 0
