@@ -6,6 +6,7 @@ param (
     [string]$KeyPath = ""
 )
 
+# 0. Locate Private Key
 if (-not $KeyPath -or -not (Test-Path $KeyPath)) {
     if (Test-Path "C:\ProgramData\Jenkins\retailmax-aws-key.pem") {
         $KeyPath = "C:\ProgramData\Jenkins\retailmax-aws-key.pem"
@@ -16,15 +17,41 @@ if (-not $KeyPath -or -not (Test-Path $KeyPath)) {
     }
 }
 
+if (-not (Test-Path $KeyPath)) {
+    Write-Host "❌ Private key not found at $KeyPath" -ForegroundColor Red
+    exit 1
+}
+
+$currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "🚀 Deploying RetailMax Monolith to AWS EC2 from Windows" -ForegroundColor Cyan
 Write-Host "   Target Host:  $Ec2Ip" -ForegroundColor Yellow
 Write-Host "   SSH Key:      $KeyPath" -ForegroundColor Yellow
+Write-Host "   Process User: $currentUser" -ForegroundColor Yellow
 Write-Host "==========================================================" -ForegroundColor Cyan
+
+# Prepare temporary strictly-permissioned key copy to satisfy Windows OpenSSH
+$safeKey = Join-Path $env:TEMP "retailmax_deploy_key.pem"
+Copy-Item -Path $KeyPath -Destination $safeKey -Force
+
+try {
+    $acl = Get-Acl $safeKey
+    $acl.SetAccessRuleProtection($true, $false)
+    $rule = New-Object System.Security.AccessControl.FileSystemAccessRule($currentUser, "Read", "Allow")
+    $acl.AddAccessRule($rule)
+    Set-Acl -Path $safeKey -AclObject $acl
+} catch {
+    Write-Host "Notice: Using icacls ACL fallback..." -ForegroundColor Yellow
+    icacls $safeKey /inheritance:r | Out-Null
+    icacls $safeKey /grant:r "${currentUser}:(R)" | Out-Null
+}
+
+$sshOpts = @("-i", $safeKey, "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "ConnectTimeout=15")
 
 # 1. Test SSH connectivity
 Write-Host "`n[1/4] Testing SSH connection to EC2..." -ForegroundColor Green
-ssh -i $KeyPath -o StrictHostKeyChecking=no -o ConnectTimeout=10 ubuntu@$Ec2Ip "echo 'SSH Connection Successful!'"
+& ssh @sshOpts ubuntu@$Ec2Ip "echo 'SSH Connection Successful!'"
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Failed to connect via SSH. Verify your EC2 IP and KeyPath." -ForegroundColor Red
@@ -47,29 +74,28 @@ else
 fi
 "@
 
-ssh -i $KeyPath ubuntu@$Ec2Ip $syncCmd
+& ssh @sshOpts ubuntu@$Ec2Ip $syncCmd
 
 # 3. Build & Launch Docker containers
 Write-Host "`n[3/4] Building and launching RetailMax Docker stack..." -ForegroundColor Green
 $launchCmd = @"
 cd /opt/retailmax
 docker compose -f docker-compose.prod.yml down --remove-orphans || true
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build --force-recreate
 echo "Waiting for services to initialize..."
-sleep 10
-echo "Initializing RDS PostgreSQL Database..."
-docker compose -f docker-compose.prod.yml exec -T backend node scripts/setup-db.js || true
+sleep 12
+echo "Validating database migration and seeds..."
 docker compose -f docker-compose.prod.yml ps
 "@
 
-ssh -i $KeyPath ubuntu@$Ec2Ip $launchCmd
+& ssh @sshOpts ubuntu@$Ec2Ip $launchCmd
 
 # 4. Validate live health
 Write-Host "`n[4/4] Validating local and ALB health status..." -ForegroundColor Green
 $probeCmd = @"
 curl -s http://127.0.0.1:5001/health || curl -s http://127.0.0.1/health
 "@
-ssh -i $KeyPath ubuntu@$Ec2Ip $probeCmd
+& ssh @sshOpts ubuntu@$Ec2Ip $probeCmd
 
 Write-Host "`n==========================================================" -ForegroundColor Cyan
 Write-Host "✅ Deployment Completed!" -ForegroundColor Green

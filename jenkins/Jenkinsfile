@@ -220,8 +220,11 @@ pipeline {
                         bat """
                             @echo off
                             echo Deploying updated codebase to live AWS EC2 host (98.80.58.78)...
-                            powershell -ExecutionPolicy Bypass -Command "& { powershell -ExecutionPolicy Bypass -File .\\deploy\\deploy-to-ec2.ps1 -Ec2Ip '98.80.58.78'; exit \$LASTEXITCODE }"
-                            exit /b %ERRORLEVEL%
+                            powershell -ExecutionPolicy Bypass -File .\\deploy\\deploy-to-ec2.ps1 -Ec2Ip "98.80.58.78"
+                            if %ERRORLEVEL% neq 0 (
+                                echo ❌ Deploy to EC2 failed with exit code %ERRORLEVEL%
+                                exit /b %ERRORLEVEL%
+                            )
                         """
                     }
                 }
@@ -240,14 +243,9 @@ pipeline {
                             fi
                         """
                     } else {
-                        powershell """
-                            try {
-                                \$res = Invoke-RestMethod -Uri 'http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/health' -TimeoutSec 5
-                                Write-Host "Live AWS ALB Health Check Status: \$(\$res.status)"
-                            } catch {
-                                Write-Host "Live health check notice: \$(\$_.Exception.Message)"
-                            }
-                            exit 0
+                        bat """
+                            @echo off
+                            powershell -ExecutionPolicy Bypass -Command "& { try { \$res = Invoke-RestMethod -Uri 'http://retailmax-alb-1087523635.us-east-1.elb.amazonaws.com/health' -TimeoutSec 10; Write-Host 'Live AWS ALB Health Check Status: '\$res.status } catch { Write-Host 'Live health probe response:' \$_.Exception.Message }; exit 0 }"
                         """
                     }
                 }
