@@ -129,7 +129,7 @@ export const CartPage = () => {
             </div>
             <div className="flex justify-between">
               <span>Estimated Sales Tax</span>
-              <span className="font-semibold text-gray-900">$0.00</span>
+              <span className="font-semibold text-gray-900">{formatCurrency(0)}</span>
             </div>
 
             <div className="pt-4 border-t border-gray-200 flex justify-between text-base font-black text-gray-900">

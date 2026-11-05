@@ -7,7 +7,9 @@ param (
 )
 
 if (-not $KeyPath -or -not (Test-Path $KeyPath)) {
-    if (Test-Path "$PSScriptRoot\retailmax-aws-key.pem") {
+    if (Test-Path "C:\ProgramData\Jenkins\retailmax-aws-key.pem") {
+        $KeyPath = "C:\ProgramData\Jenkins\retailmax-aws-key.pem"
+    } elseif (Test-Path "$PSScriptRoot\retailmax-aws-key.pem") {
         $KeyPath = "$PSScriptRoot\retailmax-aws-key.pem"
     } elseif (Test-Path "C:\Users\visha\Downloads\retailmax-aws-key.pem") {
         $KeyPath = "C:\Users\visha\Downloads\retailmax-aws-key.pem"

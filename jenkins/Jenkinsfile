@@ -11,7 +11,7 @@ pipeline {
     }
 
     triggers {
-        pollSCM('H/2 * * * *')
+        pollSCM('* * * * *')
         githubPush()
     }
 
@@ -220,8 +220,8 @@ pipeline {
                         bat """
                             @echo off
                             echo Deploying updated codebase to live AWS EC2 host (98.80.58.78)...
-                            powershell -ExecutionPolicy Bypass -Command "& { if ((Test-Path 'deploy\\retailmax-aws-key.pem') -or (Test-Path 'C:\\Users\\visha\\Downloads\\retailmax-aws-key.pem')) { powershell -ExecutionPolicy Bypass -File .\\deploy\\deploy-to-ec2.ps1 -Ec2Ip '98.80.58.78' } else { Write-Host 'EC2 private key not found on runner; skipping remote deploy.' } }"
-                            exit /b 0
+                            powershell -ExecutionPolicy Bypass -Command "& { powershell -ExecutionPolicy Bypass -File .\\deploy\\deploy-to-ec2.ps1 -Ec2Ip '98.80.58.78'; exit \$LASTEXITCODE }"
+                            exit /b %ERRORLEVEL%
                         """
                     }
                 }

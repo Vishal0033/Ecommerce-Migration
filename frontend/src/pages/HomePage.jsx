@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, ShieldCheck, Truck, RotateCcw, Clock } from 'lucide-react';
 import api from '../utils/api';
 import { ProductCard } from '../components/ProductCard';
+import { formatCurrency } from '../utils/formatters';
 
 export const HomePage = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -82,7 +83,7 @@ export const HomePage = () => {
                   <p className="text-xs text-blue-400 font-medium">Bestseller of the Week</p>
                   <p className="text-sm font-bold text-white">Aura Studio Headphones</p>
                 </div>
-                <span className="text-base font-extrabold text-white">$299.99</span>
+                <span className="text-base font-extrabold text-white">{formatCurrency(299.99)}</span>
               </div>
             </div>
           </div>
