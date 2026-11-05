@@ -6,6 +6,7 @@
 [![CI/CD: Jenkins Pipeline](https://img.shields.io/badge/CI%2FCD-Jenkins%20Declarative%20Pipeline-D24939.svg)](jenkins/Jenkinsfile)
 [![Observability: Prometheus & Grafana](https://img.shields.io/badge/Observability-Prometheus%20%2B%20Grafana-F46800.svg)](monitoring/)
 [![Releases: Zero-Downtime](https://img.shields.io/badge/Releases-Nginx%20Blue--Green-22c55e.svg)](docs/MIGRATION_GUIDE.md)
+[![Currency: INR](https://img.shields.io/badge/Currency-INR%20(%E2%82%B9)-success.svg)](frontend/)
 
 > Enterprise-grade full-stack e-commerce monolithic application engineered for automated DevOps provisioning, continuous integration & deployment, zero-downtime Blue-Green cloud cutover, and high-availability AWS cloud hosting.
 
